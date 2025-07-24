@@ -14,7 +14,7 @@
             <el-input v-model="ruleForm.password" prefix-icon="lock" clearable show-password  placeholder="请输入用户名"></el-input>
         </el-form-item>
 
-        <el-form-item>
+        <el-form-item prop="captcha">
             <div class="box-code">
                 <el-input v-model="ruleForm.captcha" prefix-icon="CircleCheck" clearable placeholder="请输入验证码"></el-input>
                 <el-image class='code' :src="captchaUrl" @click="getCaptcha"></el-image>
@@ -59,6 +59,9 @@ const rules = reactive<FormRules<UserRuleForm>>({
     ],
     password: [
         { required: true, message: '请输入密码', trigger: 'blur' },
+    ],
+    captcha: [
+        { required: true, message: '请输入验证码', trigger: 'blur' },
     ]
 })
 const isLogin = ref<boolean>(false);
@@ -93,7 +96,6 @@ const login = async (formEl: FormInstance | undefined) => {
         if(res.code !== 200){
             ElMessage.error(res.msg);
         }
-
     } else {
         ElMessage.warning('请填写正确内容');
     }

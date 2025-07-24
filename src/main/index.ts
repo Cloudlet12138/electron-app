@@ -1,7 +1,9 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { electronApp, is, optimizer } from '@electron-toolkit/utils'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+
+
 
 function createWindow(): void {
   // Create the browser window.
@@ -9,14 +11,17 @@ function createWindow(): void {
     width: 900,
     height: 670,
     show: false,
+    resizable: false,
     autoHideMenuBar: true,
+    // titleBarStyle: 'hidden',
+    frame: false,//无边框窗口
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
     }
   })
-
+  // 显示窗口
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
@@ -26,13 +31,40 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
+  // 子窗口的对象
+  const context = {
+    // 是否退出应用
+    allowQuitting: false,
+    // 显示隐藏窗口
+    isShow: false,
+    // 创建窗口的对象
+    listWindow: null
+  }
+
+  //显示窗口
+  // const showWindow = () => {
+  //   if (context.listWindow && !context.listWindow.isDestroyed()) {
+  //     context.isShow = true;
+  //     context.listWindow.show();
+  //   }
+  // }
+
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
+  // 对应的页面
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  // 窗口拖拽
+  ipcMain.handle('custom-adsorption', (event, res) => {
+    console.log(event)
+    let x = res.appX;
+    let y = res.appY;
+    mainWindow.setPosition(x, y);
+  })
 }
 
 // This method will be called when Electron has finished
@@ -50,7 +82,8 @@ app.whenReady().then(() => {
   })
 
   // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  // ipcMain.on('ping', () => console.log('pong'))
+
 
   createWindow()
 

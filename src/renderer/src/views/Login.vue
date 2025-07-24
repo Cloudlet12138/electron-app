@@ -1,10 +1,10 @@
 <template>
-    <div class="login">
+    <div class="login" @mousedown="moveWindow">
         <!--左侧-->
         <div class="login_adv">
             <div class="login_adv_title">
                 <h2>小浮云</h2>
-                <h4>客户关系管理系统</h4>
+                <h4>最精简的基础权限框架系统</h4>
                 <p>让业务在线更高效，加速企业数字化升级。</p>
             </div>
             <div class="login_adv_mask"></div>
@@ -13,7 +13,7 @@
                 <img src="../assets/images/data.png" width="100%">
             </div>
             <div class="login_adv_bottom">
-                © 小浮云客户管理系统 1.0.11
+                © 小浮云开源
             </div>
         </div>
         <!--右侧-->
@@ -27,17 +27,19 @@
                     </div>
                 </div>
                 <el-tabs>
-                    <el-tab-pane label="账号登录" lazy>
+                    <el-tab-pane label="账号登录" lazy style="height: 300px;">
                         <passwordForm></passwordForm>
                     </el-tab-pane>
-                    <el-tab-pane label="手机号登录" lazy>Config</el-tab-pane>
+                    <el-tab-pane label="手机号登录" lazy style="height: 300px;">
+                        <loginByMobile></loginByMobile>
+                    </el-tab-pane>
                 </el-tabs>
                 <template v-if='true'>
                     <el-divider>其他登录方式</el-divider>
                     <div class="login-oauth">
-                        <!--微信按钮-->
+                        <!--微信按钮扫码登录-->
                         <el-button type="success" circle  size="large">
-                            <el-icon size="large">
+                            <el-icon size="large" @click="wxLogin">
                                <ChatDotRound />
                             </el-icon>
                         </el-button>
@@ -48,8 +50,43 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { ref } from 'vue';
+import loginByMobile from './login/components/loginByMobile.vue';
 import passwordForm from './login/components/passwordForm.vue';
+
+const wxLogin = () => {
+    window.electron.ipcRenderer.invoke('renderder-to-main', {
+        type:'wx',
+        event:'event',
+        data: null
+    });
+}
+
+let isKeyDown = ref<boolean>(false);
+let dinatesX = ref<number>(0);
+let dinatesY = ref<number>(0);
+
+const moveWindow = (event) => {
+    isKeyDown.value = true;
+    dinatesX.value = event.x;
+    dinatesY.value = event.y;
+    document.onmousemove = (ev) => {
+        if(isKeyDown.value){
+            const x = ev.screenX - dinatesX.value;
+            const y = ev.screenY - dinatesY.value;
+            //给主进程传入坐标
+            let data = {
+                appX:x,
+                appY:y
+            }
+            window.electron.ipcRenderer.invoke('custom-adsorption',data);
+        }
+    };
+    document.onmouseup = () => {
+        isKeyDown.value = false
+    };
+}
 
 </script>
 
